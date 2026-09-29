@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PayPal</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+
+  body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4ecf5 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ekran { display: none; width: 100%; max-width: 460px; padding: 20px; }
+  .ekran.aktif { display: block; animation: gecis .35s ease; }
+  @keyframes gecis {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .kart {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .12);
+    padding: 24px 28px;
+  }
+
+  /* ---------- ÜST BAR ---------- */
+  .ust-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .logo { user-select: none; }
+  .logo .p1 { color: #003087; font-size: 26px; font-weight: 800; font-style: italic; }
+  .logo .p2 { color: #009cde; font-size: 26px; font-weight: 800; font-style: italic; }
+
+  .profil {
+    display: flex; align-items: center; gap: 9px;
+    background: #f4f6f9; border-radius: 24px; padding: 5px 14px 5px 6px;
+  }
+  .p-avatar {
+    width: 34px; height: 34px; border-radius: 50%; background: #9da3ab;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .p-ad { font-size: 13px; font-weight: 700; color: #2c2e2f; line-height: 1.2; }
+  .p-mail { font-size: 11px; color: #9da3ab; line-height: 1.2; }
+
+  h2 { color: #2c2e2f; font-size: 17px; margin-bottom: 14px; }
+
+  .bolum-baslik {
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: #9da3ab; margin: 4px 0 10px;
+  }
+
+  input {
+    width: 100%; padding: 12px 14px; border: 1px solid #d5d9e0; border-radius: 8px;
+    font-size: 14px; outline: none; margin-bottom: 10px; transition: border .15s;
+  }
+  input:focus { border-color: #009cde; box-shadow: 0 0 0 2px rgba(0, 156, 222, .15); }
+  input[readonly] { background: #f8f9fb; cursor: default; }
+  input[readonly]:focus { border-color: #d5d9e0; box-shadow: none; }
+
+  .ana-buton {
+    width: 100%; padding: 13px; border: none; border-radius: 24px;
+    background: #003087; color: #fff; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 4px; transition: background .15s;
+  }
+  .ana-buton:hover { background: #00409c; }
+
+  .kart-satir { display: flex; gap: 10px; }
+  .kart-satir input { flex: 1; }
+
+  .hata {
+    display: none;
+    background: #fdecec; border: 1px solid #ff4d5e; color: #c02838;
+    font-size: 13px; font-weight: 600; border-radius: 8px;
+    padding: 10px 12px; margin-top: 10px;
+  }
+
+  .ayirici {
+    display: flex; align-items: center; color: #9da3ab;
+    font-size: 12px; margin: 14px 0;
+  }
+  .ayirici::before, .ayirici::after {
+    content: ""; flex: 1; height: 1px; background: #e1e5eb;
+  }
+
+  .geri {
+    background: none; border: none; color: #003087; font-size: 14px;
+    font-weight: 600; cursor: pointer; margin-top: 14px; width: 100%;
+  }
+  .geri:hover { text-decoration: underline; }
+
+  /* ---------- BAŞARI ---------- */
+  .basari-merkez { text-align: center; }
+  .basari-merkez .buyuk { font-size: 56px; margin: 10px 0; }
+
+  /* ---------- ADMİN PANEL ---------- */
+  #ekran-admin { max-width: 620px; }
+  .admin-kutu {
+    background: #fff; border-radius: 14px; padding: 24px 26px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .15);
+  }
+  .admin-baslik {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .admin-baslik h2 { margin: 0; }
+  .admin-toplam {
+    background: linear-gradient(135deg, #003087, #009cde); color: #fff;
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;
+  }
+  .admin-toplam .etiket { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; opacity: .85; }
+  .admin-toplam .tutar { font-size: 26px; font-weight: 800; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: #9da3ab; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; padding: 8px 6px; border-bottom: 2px solid #eef1f5; }
+  td { padding: 10px 6px; border-bottom: 1px solid #eef1f5; color: #2c2e2f; }
+  tr:last-child td { border-bottom: none; }
+  .td-tutar { font-weight: 700; color: #0a8f4e; white-space: nowrap; }
+
+  .bos { text-align: center; color: #9da3ab; font-size: 14px; padding: 30px 0; }
+</style>
+</head>
+<body>
+
+<!-- EKRAN 1: GİRİŞ + PARA GÖNDER -->
+<div class="ekran aktif" id="ekran-ana">
+  <div class="kart">
+    <div class="ust-bar">
+      <div class="logo"><span class="p1">Pay</span><span class="p2">Pal</span></div>
+      <div class="profil">
+        <div class="p-avatar" id="profil-avatar">👤</div>
+        <div>
+          <div class="p-ad" id="profil-ad">Misafir</div>
+          <div class="p-mail" id="profil-mail">giriş yapılmadı</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bolum-baslik">✉️ E-posta ile Gir</div>
+    <input type="text" id="eposta" placeholder="E-posta adresin" autocomplete="off">
+    <button class="ana-buton" onclick="epostaIleri()">İleri</button>
+
+    <div class="ayirici"></div>
+
+    <input type="text" value="hacker@mailc.com" readonly>
+    <input type="text" value="1.000.000.000.000" readonly>
+
+    <div class="bolum-baslik" style="margin-top:6px;">💳 Kart Bilgileri</div>
+    <input type="text" id="kart-isim" placeholder="Kart üzerindeki isim">
+    <input type="text" id="kart-no" placeholder="Kart numarası" inputmode="numeric">
+    <div class="kart-satir">
+      <input type="text" id="kart-tarih" placeholder="MM/YY">
+      <input type="text" id="kart-cvv" placeholder="CVV">
+    </div>
+
+    <div class="hata" id="hata"></div>
+
+    <button class="ana-buton" onclick="paraGonder()">Gönder</button>
+  </div>
+</div>
+
+<!-- EKRAN 2: BAŞARI -->
+<div class="ekran" id="ekran-basari">
+  <div class="kart basari-merkez">
+    <div class="buyuk">✅</div>
+    <h2 style="text-align:center;">Para Gönderildi!</h2>
+    <p style="color:#6b7280; font-size:14px; line-height:1.6;" id="basari-metin"></p>
+    <button class="ana-buton" onclick="ekranGoster('ekran-ana')">Geri Dön</button>
+  </div>
+</div>
+
+<!-- EKRAN 3: ADMİN PANELİ -->
+<div class="ekran" id="ekran-admin">
+  <div class="admin-kutu">
+    <div class="admin-baslik">
+      <h2>🕵️ Admin Paneli</h2>
+      <div class="logo"><span class="p1">Pay</span><span class="p2">Pal</span></div>
+    </div>
+
+    <div class="admin-toplam">
+      <div class="etiket">Sana Gelen Toplam Para</div>
+      <div class="tutar" id="admin-toplam">₺0</div>
+    </div>
+
+    <div id="admin-liste"></div>
+
+    <button class="geri" onclick="adminKapat()">← Siteye Dön</button>
+  </div>
+</div>
+
+<script>
+  const ADMIN_MAIL = 'hacker@mailc.com';
+  let aktifKullanici = { ad: 'Misafir', mail: '', emoji: '👤' };
+
+  function ekranGoster(id) {
+    document.querySelectorAll('.ekran').forEach(e => e.classList.remove('aktif'));
+    document.getElementById(id).classList.add('aktif');
+  }
+
+  function profilGuncelle() {
+    document.getElementById('profil-avatar').textContent = aktifKullanici.emoji;
+    document.getElementById('profil-ad').textContent = aktifKullanici.ad;
+    document.getElementById('profil-mail').textContent = aktifKullanici.mail || 'giriş yapılmadı';
+  }
+
+  function epostaIleri() {
+    const mail = document.getElementById('eposta').value.trim().toLowerCase();
+    if (!mail) { hataGoster('⚠️ Önce e-posta adresini gir!'); return; }
+    if (mail === ADMIN_MAIL) { adminAc(); return; }
+    aktifKullanici = { ad: mail.split('@')[0], mail: mail, emoji: '👤' };
+    profilGuncelle();
+    hataGizle();
+  }
+
+  function paraGonder() {
+    if (!aktifKullanici.mail) {
+      hataGoster('⚠️ Önce e-posta ile giriş yap!');
+      return;
+    }
+    const kartNo = document.getElementById('kart-no').value.trim();
+    if (!kartNo) {
+      hataGoster('⚠️ Kart numarası gerekli! Kart bilgisi olmadan para gönderilemez.');
+      return;
+    }
+    hataGizle();
+
+    // İşlemi kaydet (admin panelinde görünsün — kartın sadece son 4 hanesi)
+    const islemler = JSON.parse(localStorage.getItem('islemler') || '[]');
+    islemler.push({
+      ad: aktifKullanici.ad,
+      mail: aktifKullanici.mail || 'bilinmiyor',
+      tutar: 1000000000000,
+      kart: '•••• ' + kartNo.slice(-4),
+      zaman: new Date().toLocaleString('tr-TR')
+    });
+    localStorage.setItem('islemler', JSON.stringify(islemler));
+
+    document.getElementById('basari-metin').textContent =
+      '1.000.000.000.000 ₺, hacker@mailc.com adresine gönderildi! Kurtuldunuz! 🎉';
+    ekranGoster('ekran-basari');
+
+    document.getElementById('kart-isim').value = '';
+    document.getElementById('kart-no').value = '';
+    document.getElementById('kart-tarih').value = '';
+    document.getElementById('kart-cvv').value = '';
+  }
+
+  /* ---------- ADMİN PANEL ---------- */
+  function adminAc() {
+    const islemler = JSON.parse(localStorage.getItem('islemler') || '[]');
+    const liste = document.getElementById('admin-liste');
+
+    let toplam = 0;
+    islemler.forEach(i => toplam += i.tutar);
+    document.getElementById('admin-toplam').textContent = '₺' + toplam.toLocaleString('tr-TR');
+
+    if (islemler.length === 0) {
+      liste.innerHTML = '<div class="bos">Henüz kimse para göndermedi 😢<br>Kart bilgisi girip Gönder\'e bassınlar, burada göreceksin!</div>';
+    } else {
+      let html = '<table><tr><th>Kim Gönderdi</th><th>Kart</th><th>Tarih</th><th style="text-align:right;">Tutar</th></tr>';
+      islemler.slice().reverse().forEach(i => {
+        html += '<tr>'
+          + '<td><b>' + i.ad + '</b><br><span style="color:#9da3ab;font-size:12px;">' + i.mail + '</span></td>'
+          + '<td>' + i.kart + '</td>'
+          + '<td style="font-size:12px;color:#6b7280;">' + i.zaman + '</td>'
+          + '<td class="td-tutar" style="text-align:right;">₺' + i.tutar.toLocaleString('tr-TR') + '</td>'
+          + '</tr>';
+      });
+      html += '</table>';
+      liste.innerHTML = html;
+    }
+
+    ekranGoster('ekran-admin');
+  }
+
+  function adminKapat() {
+    ekranGoster('ekran-ana');
+    document.getElementById('eposta').value = '';
+  }
+
+  /* ---------- HATA ---------- */
+  function hataGoster(mesaj) {
+    const h = document.getElementById('hata');
+    h.textContent = mesaj;
+    h.style.display = 'block';
+  }
+  function hataGizle() {
+    document.getElementById('hata').style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
